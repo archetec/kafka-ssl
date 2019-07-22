@@ -1,0 +1,41 @@
+---
+version: '2'
+services:
+  zookeeper1:
+    image: confluentinc/cp-zookeeper:5.2.2
+    hostname: zookeeper1
+    container_name: zookeeper1
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  broker1:
+    image: kafka-ssl
+    hostname: broker1
+    container_name: broker1
+    depends_on:
+      - zookeeper1
+    ports:
+      - "29092:29092"
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper1:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,SSL_HOST:SSL
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:29092,SSL_HOST://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_SSL_TRUSTSTORE_LOCATION: /etc/ia/certs/kafka-ia.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: soleil1234
+      KAFKA_SSL_KEYSTORE_LOCATION: /etc/ia/certs/kafka-ia-broker1.keystore.jks
+      KAFKA_SSL_KEYSTORE_PASSWORD: soleil1234
+      KAFKA_SSL_KEY_PASSWORD: soleil1234
+      KAFKA_SSL_CLIENT_AUTH: required
+      KAFKA_AUTHORIZER.CLASS.NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_SSL_PRINCIPAL_MAPPING_PATTERN: ^CN=(.*$$),.*$$
+      KAFKA_SSL_PRINCIPAL_MAPPING_VALUE: $$1      
+      
+
+

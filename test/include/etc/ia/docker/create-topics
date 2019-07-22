@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+# create topics and partitions in both clusters
+
+for ((c=1; c<=TEST_NB_TOPICS; c++))
+do
+    topicname="$TEST_TOPIC_NAME_PREFIX$c"
+    echo "creating topic $topicname"
+    kafka-topics --create --topic $topicname --partitions $TEST_NB_PARTITIONS --replication-factor $TEST_REPLICATION_FACTOR --zookeeper $TEST_ZOOKEEPER_SOURCE &
+    kafka-topics --create --topic $topicname --partitions $TEST_NB_PARTITIONS --replication-factor $TEST_REPLICATION_FACTOR --zookeeper $TEST_ZOOKEEPER_TARGET &
+    # we wait every 10 topics
+#    if [ $(($c%4)) == 0 ]; then 
+#        wait
+#    fi
+    wait
+done
+
+

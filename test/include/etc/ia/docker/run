@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+. /etc/confluent/docker/bash-config
+
+echo "===> ENV Variables ..."
+show_env
+
+echo "===> User"
+id
+
+echo "===> Configuring ..."
+/etc/ia/docker/configure
+
+echo "===> Running preflight checks ... "
+/etc/ia/docker/ensure
+
+dub ensure TEST_TOPIC_NAME_PREFIX
+dub ensure TEST_NUM_RECORDS
+dub ensure TEST_RECORD_SIZE
+dub ensure TEST_THROUGHPUT
+dub ensure TEST_NB_DATA_GENERATOR_THREADS
+dub ensure TEST_NB_PARTITIONS
+dub ensure TEST_REPLICATION_FACTOR
+dub ensure TEST_ZOOKEEPER_SOURCE
+dub ensure TEST_ZOOKEEPER_TARGET
+
+echo "===> Creating tes topics ... "
+/etc/ia/docker/create-topics
+
+echo "===> Generating test data"
+for ((c=1; c<=TEST_NB_DATA_GENERATOR_THREADS; c++))
+do
+  kafka-producer-perf-test --topic "$TEST_TOPIC_NAME_PREFIX$c" \
+    --num-records $TEST_NUM_RECORDS \
+    --record-size $TEST_RECORD_SIZE \
+    --throughput $TEST_THROUGHPUT \
+    --producer-props \
+    acks=1 \
+    bootstrap.servers=$MM_CONSUMER_BOOTSTRAP_SERVERS \
+    batch.size=8196 &
+done
+
+echo "===> Launching ... "
+export CLASSPATH=/etc/ia/docker/kafka-rebalance-listener-0.0.1-SNAPSHOT.jar
+exec kafka-mirror-maker --consumer.config /etc/kafka/mirrormaker.consumer.properties \
+  --producer.config /etc/kafka/mirrormaker.producer.properties \
+  --offset.commit.interval.ms $MM_OFFSET_COMMIT_INTERVAL \
+  --num.streams $MM_NUM_STREAMS \
+  --whitelist $MM_WHITELIST \
+  --consumer.rebalance.listener ia.iafg.kafka.rebalancelistener.IAConsumerRebalanceListener
+
+wait
