@@ -1,5 +1,5 @@
 FROM confluentinc/cp-kafka:5.2.2
 
-COPY include/etc/ia/certs /etc/ia/certs
+COPY certificats /etc/kafka/secrets
 
 CMD ["/etc/confluent/docker/run"]

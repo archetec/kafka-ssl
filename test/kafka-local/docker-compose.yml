@@ -12,7 +12,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker1:
-    image: confluentinc/cp-kafka:5.2.2
+    image: kafka-ssl
     hostname: kafka-ia-broker1
     container_name: broker1
     depends_on:
@@ -20,8 +20,6 @@ services:
     ports:
       - "29092:29092"
       - "9092:9092"
-    volumes:
-      - c:/dev/repos/kafka-ssl/test/certificats:/etc/kafka/secrets
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper1:2181'
@@ -33,11 +31,12 @@ services:
       KAFKA_AUTHORIZER.CLASS.NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),.*$$/$$1/
       KAFKA_SUPER_USERS: User:kafka-ia-broker1;User:kafka-ia-client1
-      KAFKA_TOOLS_LOG4J_LOGLEVEL: DEBUG
+      KAFKA_TOOLS_LOG4J_LOGLEVEL: WARN
       KAFKA_SSL_KEYSTORE_FILENAME: kafka-ia-broker1.keystore.jks
       KAFKA_SSL_TRUSTSTORE_FILENAME: kafka-ia-broker1.keystore.jks
       KAFKA_SSL_TRUSTSTORE_CREDENTIALS: kafka-ia.truststore.cred
       KAFKA_SSL_KEYSTORE_CREDENTIALS: kafka-ia-broker1.keystore.cred
       KAFKA_SSL_KEY_CREDENTIALS: kafka-ia.ssl.cred
+      KAFKA_LOG4J_LOGGERS: kafka.authorizer.logger=DEBUG
 
 
